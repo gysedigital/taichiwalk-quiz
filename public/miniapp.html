@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TAICHI WALK - ¡Comenzá tu viaje de Tai Chi caminando hoy!</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --primary: #d94f4f;
+            --primary-hover: #c23f3f;
+            --bg-color: #faf8f5;
+            --card-bg: #ffffff;
+            --text-main: #2c2c2c;
+            --text-muted: #6b6b6b;
+            --border-color: #e6e2dc;
+            --radius: 16px;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 16px; }
+        .app-container { width: 100%; max-width: 480px; background: var(--card-bg); border-radius: var(--radius); box-shadow: 0 10px 30px rgba(0,0,0,0.06); overflow: hidden; display: flex; flex-direction: column; min-height: 680px; position: relative; border: 1px solid rgba(230, 226, 220, 0.8); }
+        
+        /* Persistent Header / Brand Logo ON ALL SCREENS */
+        .brand-header { padding: 14px 20px 10px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #f5f3ef; background: #fffdfb; position: sticky; top: 0; z-index: 20; }
+        .brand-logo-area { display: flex; align-items: center; gap: 10px; }
+        .brand-logo { width: 32px; height: 32px; border-radius: 8px; object-fit: cover; border: 1px solid var(--border-color); }
+        .brand-name { font-size: 14px; font-weight: 900; letter-spacing: 0.8px; color: #1a1a1a; text-transform: uppercase; line-height: 1.1; }
+        .brand-tag { font-size: 10px; font-weight: 700; color: var(--primary); letter-spacing: 0.4px; }
+        .step-badge { font-size: 11px; font-weight: 700; color: var(--text-muted); background: #f4f1eb; padding: 4px 10px; border-radius: 20px; }
+
+        .progress-bar-container { width: 100%; height: 5px; background: var(--border-color); overflow: hidden; display: none; }
+        .progress-bar { width: 20%; height: 100%; background: var(--primary); transition: width 0.3s ease; }
+
+        /* Screens */
+        .screen { display: none; padding: 20px 20px 28px; flex-direction: column; flex-grow: 1; justify-content: space-between; }
+        .screen.active { display: flex; animation: fadeIn 0.25s ease-out; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+        /* Welcome Screen Components */
+        .welcome-img-container { width: 100%; height: 230px; border-radius: 14px; overflow: hidden; background: #faf8f5; border: 1px solid var(--border-color); margin-bottom: 16px; position: relative; }
+        .welcome-img-container img { width: 100%; height: 100%; object-fit: cover; object-position: top center; }
+        .welcome-badge { position: absolute; top: 12px; left: 12px; background: rgba(255, 255, 255, 0.95); font-size: 11px; font-weight: 700; color: #1a1a1a; padding: 4px 10px; border-radius: 20px; border: 1px solid rgba(0,0,0,0.06); }
+        
+        .welcome-title { font-size: 22px; font-weight: 800; color: #1a1a1a; text-align: center; line-height: 1.25; margin-bottom: 8px; }
+        .welcome-desc { font-size: 13.5px; color: #555; text-align: center; line-height: 1.45; margin-bottom: 16px; padding: 0 4px; }
+        
+        .welcome-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 20px; }
+        .feature-pill { background: #faf8f5; border: 1px solid var(--border-color); border-radius: 10px; padding: 8px 4px; text-align: center; }
+        .feature-icon { font-size: 16px; display: block; margin-bottom: 2px; }
+        .feature-title { font-size: 11px; font-weight: 700; color: #222; display: block; line-height: 1.1; }
+        .feature-sub { font-size: 10px; color: var(--text-muted); }
+
+        h2 { font-size: 21px; font-weight: 700; margin-bottom: 4px; color: #1a1a1a; text-align: center; line-height: 1.25; }
+        p.subtitle { font-size: 13px; color: var(--text-muted); text-align: center; margin-bottom: 20px; }
+
+        /* Options List with Realistic Photos */
+        .options-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .option-card { display: flex; align-items: center; justify-content: space-between; padding: 10px 14px; border: 2px solid var(--border-color); border-radius: 12px; background: #fff; cursor: pointer; transition: all 0.2s ease; gap: 12px; }
+        .option-card:hover { border-color: var(--primary); background: #fdfbfb; }
+        .option-card.selected { border-color: var(--primary); background: #fff5f5; box-shadow: 0 2px 8px rgba(217, 79, 79, 0.08); }
+        
+        .option-left { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .radio-circle { width: 20px; height: 20px; border: 2px solid var(--border-color); border-radius: 50%; display: flex; align-items: center; justify-content: center; transition: all 0.2s; shrink: 0; background: #fff; }
+        .option-card.selected .radio-circle { border-color: var(--primary); background: var(--primary); }
+        .option-card.selected .radio-circle::after { content: ''; width: 8px; height: 8px; background: white; border-radius: 50%; }
+
+        .option-info { display: flex; flex-direction: column; }
+        .option-title { font-size: 14px; font-weight: 700; color: #222; line-height: 1.25; }
+        .option-desc { font-size: 11px; color: var(--text-muted); margin-top: 2px; line-height: 1.2; }
+        .option-badge { font-size: 10px; font-weight: 700; color: var(--primary); background: #fee2e2; padding: 2px 6px; border-radius: 4px; display: inline-block; width: fit-content; margin-top: 3px; }
+
+        /* Realistic Image Avatars (Mobile-First Ultra-Compressed) */
+        .option-img-container { width: 56px; height: 56px; border-radius: 12px; overflow: hidden; background: #faf8f5; border: 1px solid var(--border-color); flex-shrink: 0; }
+        .option-img-container img { width: 100%; height: 100%; object-fit: cover; object-position: center; transition: transform 0.2s; }
+        .option-card:hover .option-img-container img { transform: scale(1.05); }
+
+        /* Primary Button */
+        .btn-primary { width: 100%; background: var(--primary); color: white; border: none; padding: 15px; border-radius: 14px; font-size: 16px; font-weight: 800; cursor: pointer; transition: background 0.2s; text-align: center; text-transform: uppercase; letter-spacing: 0.5px; box-shadow: 0 4px 12px rgba(217, 79, 79, 0.2); }
+        .btn-primary:hover { background: var(--primary-hover); }
+        .btn-primary:disabled { background: #dcd6d0; cursor: not-allowed; box-shadow: none; }
+
+        /* Loading Screen Animation */
+        .loading-screen { text-align: center; justify-content: center; align-items: center; gap: 18px; padding: 40px 24px; }
+        .spinner { width: 52px; height: 52px; border: 4px solid var(--border-color); border-top: 4px solid var(--primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto; }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        /* Dashboard / Results */
+        .dashboard { overflow-y: visible; max-height: none; padding: 18px 18px 32px; }
+        .plan-header { background: linear-gradient(135deg, #fff5f5 0%, #fff 100%); border: 1px solid #fed7d7; padding: 16px; border-radius: 14px; margin-bottom: 18px; text-align: center; }
+        .plan-header h3 { color: #1a1a1a; font-size: 18px; font-weight: 800; margin-bottom: 4px; }
+        .plan-header p { font-size: 13px; color: #4a4a4a; }
+        .plan-header p strong { color: var(--primary); }
+
+        .module-section { margin-bottom: 18px; }
+        .section-title { font-size: 12px; font-weight: 800; color: #444; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px; display: flex; justify-content: space-between; align-items: center; }
+        .bonus-tag { font-size: 10px; font-weight: 800; color: #15803d; background: #f0fdf4; padding: 2px 7px; border-radius: 4px; border: 1px solid #bbf7d0; text-transform: uppercase; }
+
+        .module-card { background: #fff; border: 1px solid var(--border-color); border-radius: 12px; padding: 10px 14px; display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; text-decoration: none; color: inherit; transition: transform 0.15s, border-color 0.15s; }
+        .module-card:hover { transform: translateY(-1px); border-color: var(--primary); }
+        .module-info { display: flex; align-items: center; gap: 12px; flex: 1; }
+        
+        .module-img { width: 50px; height: 50px; border-radius: 10px; overflow: hidden; background: #fff5f5; border: 1px solid var(--border-color); flex-shrink: 0; }
+        .module-img img { width: 100%; height: 100%; object-fit: cover; }
+        .module-title { font-size: 13.5px; font-weight: 700; color: #222; line-height: 1.2; }
+        .module-desc { font-size: 11.5px; color: var(--text-muted); margin-top: 2px; }
+        .check-badge { color: #15803d; font-weight: 900; font-size: 13px; background: #f0fdf4; width: 24px; height: 24px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 1px solid #bbf7d0; flex-shrink: 0; margin-left: 8px; }
+
+        .plan-header-badge { display: inline-block; font-size: 11px; font-weight: 800; color: var(--primary); background: rgba(217, 79, 79, 0.12); padding: 4px 12px; border-radius: 999px; letter-spacing: 0.4px; text-transform: uppercase; margin-bottom: 8px; }
+        .plan-header-sub { font-size: 12.5px; color: #555; line-height: 1.5; margin-top: 8px; }
+        .closing-title { font-size: 17px; font-weight: 800; color: #ffffff; line-height: 1.3; margin-bottom: 10px; }
+        .closing-copy { font-size: 12.5px; color: #cbd5e0; line-height: 1.5; text-align: left; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 12px 14px; margin-bottom: 14px; }
+        .closing-copy p + p { margin-top: 8px; }
+        .trust-line { font-size: 12px; color: #e2e8f0; font-weight: 600; margin: 8px 0 14px; line-height: 1.4; }
+        .checkout-micro { font-size: 11.5px; color: #cbd5e0; margin-top: 12px; padding: 0 4px 2px; line-height: 1.45; overflow-wrap: break-word; }
+        .checkout-box { background: #1a202c; color: white; padding: 20px; border-radius: 14px; text-align: center; margin-top: 15px; border: 1px solid #2d3748; }
+        .price { font-size: 26px; font-weight: 800; color: #48bb78; margin: 4px 0 2px; }
+        .btn-mercadopago { background: #009ee3; color: white; width: 100%; border: none; padding: 14px; border-radius: 12px; font-weight: 800; font-size: 14px; cursor: pointer; margin-top: 6px; transition: background 0.2s; box-shadow: 0 4px 12px rgba(0, 158, 227, 0.3); text-decoration: none; display: block; line-height: 1.35; }
+        .btn-mercadopago:hover { background: #0082be; }
+    </style>
+    <!-- Meta Pixel Code -->
+    <script>
+        !function(f,b,e,v,n,t,s)
+        {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+        n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+        if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+        n.queue=[];t=b.createElement(e);t.async=!0;
+        t.src=v;s=b.getElementsByTagName(e)[0];
+        s.parentNode.insertBefore(t,s)}(window, document,'script',
+        'https://connect.facebook.net/en_US/fbevents.js');
+        fbq('init', '1076044341481744');
+        fbq('track', 'PageView');
+    </script>
+    <!-- End Meta Pixel Code -->
+</head>
+<body>
+<noscript><img height="1" width="1" style="display:none" src="https://www.facebook.com/tr?id=1076044341481744&ev=PageView&noscript=1" alt=""></noscript>
+
+<div class="app-container">
+    <!-- Persistent Header with TAICHI WALK Logo ON ALL SCREENS -->
+    <div class="brand-header" id="brand-header">
+        <div class="brand-logo-area">
+            <img src="/assets/images/taichi_walk_logo_opt.webp" alt="Tai Chi Walk" width="32" height="32" loading="eager" decoding="async" class="brand-logo" onerror="this.src='/src/assets/images/taichi_walk_logo_opt.jpg'">
+            <div>
+                <div class="brand-name">TAICHI WALK</div>
+                <div class="brand-tag">PLAN PERSONALIZADO</div>
+            </div>
+        </div>
+        <div class="step-badge" id="step-title">Método Consciente</div>
+    </div>
+    
+    <div class="progress-bar-container" id="progress-container">
+        <div class="progress-bar" id="progress-bar" style="width: 20%;"></div>
+    </div>
+
+    <!-- PANTALLA DE BIENVENIDA (Screen 0) -->
+    <div class="screen active" id="screen-0">
+        <div>
+            <!-- Luminous Sunroom Hero Photo (63KB WebP, High Priority) -->
+            <div class="welcome-img-container">
+                <img src="/assets/images/latina_sunroom_welcome_opt.webp" alt="Mujer en galería acristalada luminosa" width="640" height="480" loading="eager" fetchpriority="high" decoding="async" onerror="this.src='/src/assets/images/latina_sunroom_welcome_opt.jpg'">
+                <div class="welcome-badge">🌱 Bajo Impacto Articular</div>
+            </div>
+
+            <h1 class="welcome-title">¡Comenzá tu viaje de Tai Chi caminando hoy!</h1>
+            <p class="welcome-desc">
+                Descubrí el método de caminar Tai Chi diseñado para mujeres: una manera suave y efectiva de bajar de peso, aumentar tu energía y reconectar con la alegría de sentirte increíble en tu cuerpo.
+            </p>
+
+            <div class="welcome-features">
+                <div class="feature-pill">
+                    <span class="feature-icon">🌿</span>
+                    <span class="feature-title">Cero Impacto</span>
+                    <span class="feature-sub">Cuida rodillas</span>
+                </div>
+                <div class="feature-pill">
+                    <span class="feature-icon">✨</span>
+                    <span class="feature-title">15-20 Min</span>
+                    <span class="feature-sub">En tu sala</span>
+                </div>
+                <div class="feature-pill">
+                    <span class="feature-icon">🌸</span>
+                    <span class="feature-title">+40 Años</span>
+                    <span class="feature-sub">Mujeres reales</span>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-primary" onclick="goToStep(1)">CONTINUAR</button>
+    </div>
+
+    <!-- PASO 1: Objetivo Principal -->
+    <div class="screen" id="screen-1">
+        <div>
+            <h2>¿Qué querés lograr con tu rutina?</h2>
+            <p class="subtitle">Elegí tu objetivo principal</p>
+            <div class="options-list">
+                <div class="option-card" onclick="selectOption(1, this, 'peso')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Perder peso de forma sostenible</span>
+                            <span class="option-desc">Caminata suave y quema calórica sin impacto</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_walking_park_opt.webp" alt="Perder peso de forma sostenible" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_walking_park_opt.jpg'">
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption(1, this, 'abdomen')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Reducir grasa abdominal e hinchazón</span>
+                            <span class="option-desc">Desinflamación y cintura más liviana</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_abdomen_relief_opt.webp" alt="Reducir grasa abdominal" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_abdomen_relief_opt.jpg'">
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption(1, this, 'energia')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Tonificar el cuerpo y recuperar energía</span>
+                            <span class="option-desc">Movimientos armónicos que renuevan tu vitalidad</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_taichi_livingroom_opt.webp" alt="Tonificar cuerpo y mente" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_taichi_livingroom_opt.jpg'">
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption(1, this, 'rigidez')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Aliviar rigidez y moverme sin dolor</span>
+                            <span class="option-desc">Articulaciones flexibles y pasos suaves y seguros</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_knee_relief_opt.webp" alt="Aliviar rigidez" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_knee_relief_opt.jpg'">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="btn-primary" id="btn-1" disabled onclick="goToStep(2)">Continuar</button>
+    </div>
+
+    <!-- PASO 2: Zona de incomodidad -->
+    <div class="screen" id="screen-2">
+        <div>
+            <h2>¿Cuál es la zona que más te incomoda?</h2>
+            <p class="subtitle">Para personalizar tus ejercicios de Tai Chi Walk</p>
+            <div class="options-list">
+                <div class="option-card" onclick="selectOption(2, this, 'rodillas')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Rodillas y piernas cansadas</span>
+                            <span class="option-desc">Sensibilidad al dar pasos largos o subir escaleras</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_knee_relief_opt.webp" alt="Rodillas y piernas cansadas" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_knee_relief_opt.jpg'">
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption(2, this, 'vientre')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Vientre inflamado al final del día</span>
+                            <span class="option-desc">Pesadez y retención abdominal acumulada</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_abdomen_relief_opt.webp" alt="Vientre inflamado" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_abdomen_relief_opt.jpg'">
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption(2, this, 'lumbar')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Espalda baja / zona lumbar</span>
+                            <span class="option-desc">Tensión postural al permanecer parada o sentada</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_back_relief_opt.webp" alt="Espalda baja lumbar" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_back_relief_opt.jpg'">
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption(2, this, 'general')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Pesadez general en todo el cuerpo</span>
+                            <span class="option-desc">Hombros cargados y falta de liviandad muscular</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_taichi_livingroom_opt.webp" alt="Pesadez general" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_taichi_livingroom_opt.jpg'">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="btn-primary" id="btn-2" disabled onclick="goToStep(3)">Continuar</button>
+    </div>
+
+    <!-- PASO 3: Sueño / Estilo de vida -->
+    <div class="screen" id="screen-3">
+        <div>
+            <h2>¿Cómo impacta el cansancio en tu rutina?</h2>
+            <p class="subtitle">Queremos entender tu nivel de energía diario</p>
+            <div class="options-list">
+                <div class="option-card" onclick="selectOption(3, this, 'sueno')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Me cuesta conciliar el sueño o descanso mal</span>
+                            <span class="option-desc">Despertar sin energía o sueño interrumpido</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_peaceful_sleep_opt.webp" alt="Sueño y descanso" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_peaceful_sleep_opt.jpg'">
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption(3, this, 'estres')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Siento mucho estrés o ansiedad acumulada</span>
+                            <span class="option-desc">Mente acelerada y dificultad para desconectar</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_herbal_infusion_opt.webp" alt="Estrés y ansiedad" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_herbal_infusion_opt.jpg'">
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption(3, this, 'sedentario')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Llevo una vida muy sedentaria / ajetreada</span>
+                            <span class="option-desc">Poco tiempo libre y muchas horas de tensión</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_habit_journal_opt.webp" alt="Vida sedentaria" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_habit_journal_opt.jpg'">
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption(3, this, 'bien')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">Duermo bien pero busco más vitalidad</span>
+                            <span class="option-desc">Deseo mayor ligereza, tono y energía cotidiana</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_walking_park_opt.webp" alt="Más vitalidad" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_walking_park_opt.jpg'">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="btn-primary" id="btn-3" disabled onclick="goToStep(4)">Continuar</button>
+    </div>
+
+    <!-- PASO 4: Tiempo disponible -->
+    <div class="screen" id="screen-4">
+        <div>
+            <h2>¿Cuánto tiempo podés dedicarle al día?</h2>
+            <p class="subtitle">Diseñado para adaptarse a tu ritmo sin exigirte</p>
+            <div class="options-list">
+                <div class="option-card" onclick="selectOption(4, this, '10')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">10 a 15 minutos</span>
+                            <span class="option-badge">Inicio Suave - Nivel 1</span>
+                            <span class="option-desc">Activación articular y pasos lentos sin cansancio</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_knee_relief_opt.webp" alt="10 a 15 minutos" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_knee_relief_opt.jpg'">
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption(4, this, '20')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">20 a 25 minutos</span>
+                            <span class="option-badge">Construcción - Nivel 2</span>
+                            <span class="option-desc">Flujo continuo para quemar calorías y calmar la mente</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_taichi_livingroom_opt.webp" alt="20 a 25 minutos" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_taichi_livingroom_opt.jpg'">
+                    </div>
+                </div>
+
+                <div class="option-card" onclick="selectOption(4, this, '30')">
+                    <div class="option-left">
+                        <div class="radio-circle"></div>
+                        <div class="option-info">
+                            <span class="option-title">30 minutos o más</span>
+                            <span class="option-badge">Progresión - Nivel 3</span>
+                            <span class="option-desc">Estimulación metabólica profunda y tonificación</span>
+                        </div>
+                    </div>
+                    <div class="option-img-container">
+                        <img src="/assets/images/latina_walking_park_opt.webp" alt="30 minutos o más" width="60" height="60" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_walking_park_opt.jpg'">
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button class="btn-primary" id="btn-4" disabled onclick="goToStep(5)">Continuar</button>
+    </div>
+
+    <!-- PASO 5: Pantalla de carga simulando análisis -->
+    <div class="screen loading-screen" id="screen-5">
+        <div class="spinner"></div>
+        <h2 style="margin-top: 15px;">Analizando tus respuestas...</h2>
+        <p class="subtitle">Estamos configurando tu Plan Personalizado de Tai Chi Walk y seleccionando tus bonos exclusivos.</p>
+    </div>
+
+    <!-- RESULTADO / DASHBOARD DE LA MINIAPP -->
+    <div class="screen dashboard" id="screen-dashboard" style="padding: 0;">
+        <div style="padding: 18px 18px 24px;">
+            <!-- [ENCABEZADO DE RESULTADO] -->
+            <div class="plan-header">
+                <div class="plan-header-badge">✨ PLAN PERSONALIZADO LISTO</div>
+                <h3>¡Tu Plan de Tai Chi Walk está listo para empezar!</h3>
+                <p style="margin-top: 6px; line-height: 1.45;">
+                    Nivel asignado: <strong id="assigned-level-text">Nivel 1 — Inicio Suave y Articulaciones (10–15 minutos al día, desde tu casa y sin impacto).</strong>
+                </p>
+                <p id="personalized-diagnosis-text" class="plan-header-sub">
+                    Según tus respuestas, tu cuerpo necesita activar el metabolismo con movimientos suaves de bajo impacto en rodillas y lumbares, en solo 10 a 15 minutos por día.
+                </p>
+            </div>
+
+            <!-- TU PLAN PRINCIPAL PERSONALIZADO -->
+            <div class="module-section">
+                <div class="section-title">
+                    <span>TU PLAN PRINCIPAL PERSONALIZADO</span>
+                    <span style="font-size: 10px; color: var(--primary); font-weight: bold; background: #fee2e2; padding: 2px 6px; border-radius: 4px; flex-shrink: 0;">Base Principal</span>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-info" style="align-items: flex-start;">
+                        <div class="module-img">
+                            <img src="/assets/images/latina_taichi_livingroom_opt.webp" alt="Programa Principal Tai Chi Walk (8 Semanas)" width="50" height="50" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_taichi_livingroom_opt.jpg'">
+                        </div>
+                        <div>
+                            <div class="module-title">Programa Principal Tai Chi Walk (8 Semanas)</div>
+                            <div class="module-desc" style="line-height: 1.35;">Guía paso a paso con rutinas diarias de 10–15 min sin impacto.</div>
+                        </div>
+                    </div>
+                    <span class="check-badge">✓</span>
+                </div>
+            </div>
+
+            <!-- [SECCIÓN DE CONTENIDO INCLUIDO - BONOS 1 A 4] -->
+            <div class="module-section">
+                <div class="section-title" style="text-transform: none; font-size: 13px; color: #2c2c2c; letter-spacing: 0;">
+                    <span>Todo lo que desbloqueás hoy al activar tu plan:</span>
+                    <span class="bonus-tag" style="flex-shrink: 0;">100% Bonificados</span>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-info" style="align-items: flex-start;">
+                        <div class="module-img">
+                            <img src="/assets/images/latina_knee_relief_opt.webp" alt="Bono 1 — Calentamiento Articular (5 Min)" width="50" height="50" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_knee_relief_opt.jpg'">
+                        </div>
+                        <div>
+                            <div class="module-title">Bono 1 — Calentamiento Articular (5 Min)</div>
+                            <div class="module-desc" style="line-height: 1.35;">Rutina corta e ilustrada para preparar el cuerpo antes de moverte.</div>
+                        </div>
+                    </div>
+                    <span class="check-badge">✓</span>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-info" style="align-items: flex-start;">
+                        <div class="module-img">
+                            <img src="/assets/images/latina_herbal_infusion_opt.webp" alt="Bono 2 — 45 Infusiones Desinflamatorias" width="50" height="50" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_herbal_infusion_opt.jpg'">
+                        </div>
+                        <div>
+                            <div class="module-title">Bono 2 — 45 Infusiones Desinflamatorias</div>
+                            <div class="module-desc" style="line-height: 1.35;">Recetas prácticas para acompañar el bienestar digestivo, aliviar tensiones y bajar el ritmo del día.</div>
+                        </div>
+                    </div>
+                    <span class="check-badge">✓</span>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-info" style="align-items: flex-start;">
+                        <div class="module-img">
+                            <img src="/assets/images/latina_habit_journal_opt.webp" alt="Bono 3 — Tracker de Hábitos (8 Semanas)" width="50" height="50" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_habit_journal_opt.jpg'">
+                        </div>
+                        <div>
+                            <div class="module-title">Bono 3 — Tracker de Hábitos (8 Semanas)</div>
+                            <div class="module-desc" style="line-height: 1.35;">Plantilla visual para marcar tus avances día a día y mantener el ritmo sin culpa.</div>
+                        </div>
+                    </div>
+                    <span class="check-badge">✓</span>
+                </div>
+
+                <div class="module-card">
+                    <div class="module-info" style="align-items: flex-start;">
+                        <div class="module-img">
+                            <img src="/assets/images/latina_back_relief_opt.webp" alt="Bono 4: Recuperación Articular Express (Estiramiento suave post-caminata)" width="50" height="50" loading="lazy" decoding="async" onerror="this.src='/src/assets/images/latina_back_relief_opt.jpg'">
+                        </div>
+                        <div>
+                            <div class="module-title" style="white-space: normal; overflow-wrap: break-word;">Bono 4: Recuperación Articular Express (Estiramiento suave post-caminata)</div>
+                            <div class="module-desc" style="line-height: 1.35;">Rutina breve de descarga para esos días en que sentís el cuerpo más cargado o tenso.</div>
+                        </div>
+                    </div>
+                    <span class="check-badge">✓</span>
+                </div>
+            </div>
+
+            <!-- [BLOQUE FINAL DE CIERRE Y LLAMADO A LA VENTA — JUSTO ANTES DEL BOTÓN] -->
+            <div class="checkout-box">
+                <div style="margin-bottom: 10px;">
+                    <span style="display: inline-block; font-size: 10px; font-weight: 800; color: #fed7d7; background: rgba(229,75,75,0.25); border: 1px solid rgba(229,75,75,0.4); padding: 2px 9px; border-radius: 999px; text-transform: uppercase; letter-spacing: 0.5px;">🚀 Precio Especial de Lanzamiento</span>
+                </div>
+
+                <h4 class="closing-title">Empezá hoy a tu ritmo, sin exigencias</h4>
+
+                <div style="margin: 10px 0 6px;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap; margin-bottom: 3px;">
+                        <span style="font-size: 13px; color: #a0aec0; text-decoration: line-through;">$22.900 ARS</span>
+                        <span style="font-size: 11px; color: #48bb78; font-weight: 700; background: rgba(72,187,120,0.18); padding: 2px 7px; border-radius: 6px; letter-spacing: 0.3px;">Ahorrás $11.000 ARS (48% OFF)</span>
+                    </div>
+                    <div class="price" style="font-size: 32px; font-weight: 900; color: #48bb78; margin: 4px 0 2px; line-height: 1.1;">
+                        $11.900 <span style="font-size: 15px; font-weight: 700; color: #cbd5e0;">ARS</span>
+                    </div>
+                </div>
+
+                <p class="trust-line">Pago único en Mercado Pago · Acceso inmediato · Sin cuotas ocultas</p>
+                
+                <!-- Tokens preservados para integración interna de ImpulTienda sin visualización directa -->
+                <span style="display:none !important;" aria-hidden="true" data-price="{{price}}" data-currency="{{currency}}" data-original-price="{{original_price}}" data-savings="{{savings}}"></span>
+                
+                <a href="https://gydigimarket.impultienda.ar/checkout" data-checkout class="btn-mercadopago" id="btn-mercadopago" style="display: flex; align-items: center; justify-content: center; width: 100%; box-sizing: border-box; background: #009ee3; color: #ffffff; padding: 15px 16px; border-radius: 12px; font-weight: 800; font-size: 14px; letter-spacing: 0.3px; text-decoration: none; text-align: center; box-shadow: 0 4px 14px rgba(0, 158, 227, 0.35); cursor: pointer; text-transform: uppercase; line-height: 1.35;">
+                    QUIERO MI PLAN TAI CHI WALK Y MIS BONOS AHORA →
+                </a>
+
+                <p class="checkout-micro">Vas a pasar al checkout seguro con entrega automática al instante tras el pago.</p>
+
+                <div style="margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,0.1);">
+                    <div style="font-size: 11px; color: #cbd5e0; font-weight: 600;">
+                        Compra 100% Segura • Entrega Digital Inmediata
+                    </div>
+                    <p style="font-size: 11px; color: #94a3b8; margin-top: 5px;">
+                        Pagás con Mercado Pago, tarjeta o transferencia
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const userSelections = {};
+    const CHECKOUT_URL = 'https://gydigimarket.impultienda.ar/checkout';
+    let autoAdvanceTimer = null;
+
+    function selectOption(step, element, value) {
+        const parent = element.parentElement;
+        parent.querySelectorAll('.option-card').forEach(card => card.classList.remove('selected'));
+        element.classList.add('selected');
+        userSelections[step] = value;
+
+        const btn = document.getElementById(`btn-${step}`);
+        if(btn) btn.disabled = false;
+
+        if (autoAdvanceTimer) {
+            clearTimeout(autoAdvanceTimer);
+            autoAdvanceTimer = null;
+        }
+        if (step >= 1 && step <= 4) {
+            autoAdvanceTimer = setTimeout(() => {
+                autoAdvanceTimer = null;
+                goToStep(step + 1);
+            }, 300);
+        }
+    }
+
+    function updatePersonalizedDiagnosis() {
+        const goalMap = {
+            peso: 'activar el metabolismo y bajar de peso de forma sostenible',
+            abdomen: 'desinflamar el abdomen y activar el metabolismo',
+            energia: 'tonificar el cuerpo y recuperar tu energía diaria',
+            rigidez: 'soltar la rigidez y moverte con más liviandad'
+        };
+        const areaMap = {
+            rodillas: 'en rodillas y piernas cansadas',
+            vientre: 'en la zona abdominal y lumbar',
+            lumbar: 'en espalda baja y lumbares',
+            general: 'en todo el cuerpo y articulaciones'
+        };
+        const timeMap = {
+            '10': 'en solo 10 a 15 minutos por día',
+            '20': 'en solo 20 a 25 minutos por día',
+            '30': 'en 30 minutos por día'
+        };
+        const goalText = goalMap[userSelections[1]] || 'activar el metabolismo';
+        const areaText = areaMap[userSelections[2]] || 'en rodillas y lumbares';
+        const timeText = timeMap[userSelections[4]] || 'en solo 10 a 15 minutos por día';
+
+        const diagElem = document.getElementById('personalized-diagnosis-text');
+        if (diagElem) {
+            diagElem.innerText = `Según tus respuestas, tu cuerpo necesita ${goalText} con movimientos suaves de bajo impacto ${areaText}, ${timeText}.`;
+        }
+    }
+
+    function goToStep(targetStep) {
+        if (autoAdvanceTimer) {
+            clearTimeout(autoAdvanceTimer);
+            autoAdvanceTimer = null;
+        }
+        document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+        
+        const progContainer = document.getElementById('progress-container');
+        const stepTitle = document.getElementById('step-title');
+
+        if(targetStep === 0) {
+            progContainer.style.display = 'none';
+            stepTitle.innerText = 'Método Consciente';
+            document.getElementById('screen-0').classList.add('active');
+        } else if(targetStep >= 1 && targetStep <= 4) {
+            progContainer.style.display = 'block';
+            document.getElementById(`screen-${targetStep}`).classList.add('active');
+            const progress = (targetStep / 5) * 100;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+            stepTitle.innerText = `Paso ${targetStep} de 5`;
+        } else if(targetStep === 5) {
+            progContainer.style.display = 'none';
+            stepTitle.innerText = 'Analizando...';
+            document.getElementById('screen-5').classList.add('active');
+            
+            setTimeout(() => {
+                document.getElementById('screen-5').classList.remove('active');
+                document.getElementById('screen-dashboard').classList.add('active');
+                stepTitle.innerText = 'Plan Asignado';
+
+                // Duración unificada en 10–15 minutos al día para el Nivel 1
+                const levelElem = document.getElementById('assigned-level-text');
+                if (levelElem) {
+                    levelElem.innerText = 'Nivel 1 — Inicio Suave y Articulaciones (10–15 minutos al día, desde tu casa y sin impacto).';
+                }
+                updatePersonalizedDiagnosis();
+
+                // Track ViewContent
+                try {
+                    if (window.fbq) {
+                        fbq('track', 'ViewContent', {
+                            content_name: 'Tai Chi Walk 8 Semanas - MiniApp',
+                            value: 11900,
+                            currency: 'ARS'
+                        });
+                    }
+                } catch(e) {}
+            }, 2500);
+        }
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    // Checkout tracking
+    document.getElementById('btn-mercadopago')?.addEventListener('click', function(e) {
+        try {
+            if (window.fbq) {
+                fbq('track', 'InitiateCheckout', {
+                    content_name: 'Tai Chi Walk 8 Semanas',
+                    value: 11900,
+                    currency: 'ARS'
+                });
+            }
+        } catch(err) {}
+    });
+</script>
+
+</body>
+</html>
