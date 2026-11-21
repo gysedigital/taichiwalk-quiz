@@ -1,0 +1,8 @@
+{
+  "name": "Tai Chi Walk",
+  "description": "Embudo de quiz y plan personalizado de caminata Tai Chi Walk de 8 semanas.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
